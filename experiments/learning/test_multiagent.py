@@ -300,7 +300,7 @@ if __name__ == "__main__":
     obs = test_env.reset()
     logger = Logger(logging_freq_hz=int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS),
                     num_drones=NUM_DRONES,
-                    colab=parser.colab,
+                    colab=ARGS.colab,
                     )
     if ACT in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
         action = {i: np.array([0]) for i in range(NUM_DRONES)}
