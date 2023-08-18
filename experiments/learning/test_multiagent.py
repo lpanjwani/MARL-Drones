@@ -44,12 +44,13 @@ from gym_pybullet_drones.envs.multi_agent_rl.LeaderFollowerAviary import LeaderF
 from gym_pybullet_drones.envs.multi_agent_rl.MeetupAviary import MeetupAviary
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
 from gym_pybullet_drones.utils.Logger import Logger
-from gym_pybullet_drones.utils.utils import sync
+from gym_pybullet_drones.utils.utils import sync, str2bool
 
 import shared_constants
 
 OWN_OBS_VEC_SIZE = None # Modified at runtime
 ACTION_VEC_SIZE = None # Modified at runtime
+DEFAULT_COLAB = False
 
 ############################################################
 class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
@@ -69,17 +70,17 @@ class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
         TorchModelV2.__init__(self, obs_space, action_space, num_outputs, model_config, name)
         nn.Module.__init__(self)
         self.action_model = FullyConnectedNetwork(
-                                                  Box(low=-1, high=1, shape=(OWN_OBS_VEC_SIZE, )), 
+                                                  Box(low=-1, high=1, shape=(OWN_OBS_VEC_SIZE, )),
                                                   action_space,
                                                   num_outputs,
                                                   model_config,
                                                   name + "_action"
                                                   )
         self.value_model = FullyConnectedNetwork(
-                                                 obs_space, 
+                                                 obs_space,
                                                  action_space,
-                                                 1, 
-                                                 model_config, 
+                                                 1,
+                                                 model_config,
                                                  name + "_vf"
                                                  )
         self._model_in = None
@@ -97,7 +98,7 @@ class FillInActions(DefaultCallbacks):
     def on_postprocess_trajectory(self, worker, episode, agent_id, policy_id, policies, postprocessed_batch, original_batches, **kwargs):
         to_update = postprocessed_batch[SampleBatch.CUR_OBS]
         other_id = 1 if agent_id == 0 else 0
-        action_encoder = ModelCatalog.get_preprocessor_for_space( 
+        action_encoder = ModelCatalog.get_preprocessor_for_space(
                                                                  # Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
                                                                  Box(-1, 1, (ACTION_VEC_SIZE,), np.float32) # Bounded
                                                                  )
@@ -128,12 +129,15 @@ if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Multi-agent reinforcement learning experiments script')
     parser.add_argument('--exp',    type=str,       help='The experiment folder written as ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<time_date>', metavar='')
+    parser.add_argument('--colab',              default=DEFAULT_COLAB, type=bool,           help='Whether example is being run by a notebook (default: "False")', metavar='')
+    parser.add_argument('--gui',                default=True,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--record_video',       default=False,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
     ARGS = parser.parse_args()
 
     #### Parameters to recreate the environment ################
     NUM_DRONES = int(ARGS.exp.split("-")[2])
     OBS = ObservationType.KIN if ARGS.exp.split("-")[4] == 'kin' else ObservationType.RGB
-    
+
     # Parse ActionType instance from file name
     action_name = ARGS.exp.split("-")[5]
     ACT = [action for action in ActionType if action.value == action_name]
@@ -235,12 +239,12 @@ if __name__ == "__main__":
     }
 
     #### Set up the model parameters of the trainer's config ###
-    config["model"] = { 
+    config["model"] = {
         "custom_model": "cc_model",
     }
-    
+
     #### Set up the multiagent params of the trainer's config ##
-    config["multiagent"] = { 
+    config["multiagent"] = {
         "policies": {
             "pol0": (None, observer_space, action_space, {"agent_id": 0,}),
             "pol1": (None, observer_space, action_space, {"agent_id": 1,}),
@@ -269,33 +273,34 @@ if __name__ == "__main__":
                                aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
                                obs=OBS,
                                act=ACT,
-                               gui=True,
-                               record=False
+                               gui=ARGS.gui,
+                               record=ARGS.record_video
                                )
     elif ARGS.exp.split("-")[1] == 'leaderfollower':
         test_env = LeaderFollowerAviary(num_drones=NUM_DRONES,
                                         aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
                                         obs=OBS,
                                         act=ACT,
-                                        gui=True,
-                                        record=False
+                                        gui=ARGS.gui,
+                                        record=ARGS.record_video
                                         )
     elif ARGS.exp.split("-")[1] == 'meetup':
         test_env = MeetupAviary(num_drones=NUM_DRONES,
                                 aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
                                 obs=OBS,
                                 act=ACT,
-                                gui=True,
-                                record=False
+                                gui=ARGS.gui,
+                                record=ARGS.record_video
                                 )
     else:
         print("[ERROR] environment not yet implemented")
         exit()
-    
+
     #### Show, record a video, and log the model's performance #
     obs = test_env.reset()
     logger = Logger(logging_freq_hz=int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS),
-                    num_drones=NUM_DRONES
+                    num_drones=NUM_DRONES,
+                    colab=parser.colab,
                     )
     if ACT in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
         action = {i: np.array([0]) for i in range(NUM_DRONES)}
@@ -315,7 +320,7 @@ if __name__ == "__main__":
         action = {0: temp[0][0], 1: temp[1][0]}
         obs, reward, done, info = test_env.step(action)
         test_env.render()
-        if OBS==ObservationType.KIN: 
+        if OBS==ObservationType.KIN:
             for j in range(NUM_DRONES):
                 logger.log(drone=j,
                            timestamp=i/test_env.SIM_FREQ,
