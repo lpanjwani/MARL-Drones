@@ -48,6 +48,7 @@ from ray.rllib.models import ModelCatalog
 from ray.rllib.policy.sample_batch import SampleBatch
 from ray.rllib.env.multi_agent_env import ENV_STATE
 
+from gym_pybullet_drones.utils.utils import str2bool
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.multi_agent_rl.FlockAviary import FlockAviary
 from gym_pybullet_drones.envs.multi_agent_rl.LeaderFollowerAviary import LeaderFollowerAviary
@@ -83,17 +84,17 @@ class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
         TorchModelV2.__init__(self, obs_space, action_space, num_outputs, model_config, name)
         nn.Module.__init__(self)
         self.action_model = FullyConnectedNetwork(
-                                                  Box(low=-1, high=1, shape=(OWN_OBS_VEC_SIZE, )), 
+                                                  Box(low=-1, high=1, shape=(OWN_OBS_VEC_SIZE, )),
                                                   action_space,
                                                   num_outputs,
                                                   model_config,
                                                   name + "_action"
                                                   )
         self.value_model = FullyConnectedNetwork(
-                                                 obs_space, 
+                                                 obs_space,
                                                  action_space,
-                                                 1, 
-                                                 model_config, 
+                                                 1,
+                                                 model_config,
                                                  name + "_vf"
                                                  )
         self._model_in = None
@@ -111,7 +112,7 @@ class FillInActions(DefaultCallbacks):
     def on_postprocess_trajectory(self, worker, episode, agent_id, policy_id, policies, postprocessed_batch, original_batches, **kwargs):
         to_update = postprocessed_batch[SampleBatch.CUR_OBS]
         other_id = 1 if agent_id == 0 else 0
-        action_encoder = ModelCatalog.get_preprocessor_for_space( 
+        action_encoder = ModelCatalog.get_preprocessor_for_space(
                                                                  # Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
                                                                  Box(-1, 1, (ACTION_VEC_SIZE,), np.float32) # Bounded
                                                                  )
@@ -146,7 +147,9 @@ if __name__ == "__main__":
     parser.add_argument('--obs',         default='kin',             type=ObservationType,                                                     help='Observation space (default: kin)', metavar='')
     parser.add_argument('--act',         default='one_d_rpm',       type=ActionType,                                                          help='Action space (default: one_d_rpm)', metavar='')
     parser.add_argument('--algo',        default='cc',              type=str,             choices=['cc'],                                     help='MARL approach (default: cc)', metavar='')
-    parser.add_argument('--workers',     default=0,                 type=int,                                                                 help='Number of RLlib workers (default: 0)', metavar='')        
+    parser.add_argument('--workers',     default=0,                 type=int,                                                                 help='Number of RLlib workers (default: 0)', metavar='')
+    parser.add_argument('--gui',                default=True,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--record_video',       default=False,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
     ARGS = parser.parse_args()
 
     #### Save directory ########################################
@@ -221,19 +224,25 @@ if __name__ == "__main__":
         temp_env = FlockAviary(num_drones=ARGS.num_drones,
                                aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
                                obs=ARGS.obs,
-                               act=ARGS.act
+                               act=ARGS.act,
+                               gui=ARGS.gui,
+                               record=ARGS.record_video
                                )
     elif ARGS.env == 'leaderfollower':
         temp_env = LeaderFollowerAviary(num_drones=ARGS.num_drones,
                                         aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
                                         obs=ARGS.obs,
-                                        act=ARGS.act
+                                        act=ARGS.act,
+                                        gui=ARGS.gui,
+                                        record=ARGS.record_video
                                         )
     elif ARGS.env == 'meetup':
         temp_env = MeetupAviary(num_drones=ARGS.num_drones,
                                 aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
                                 obs=ARGS.obs,
-                                act=ARGS.act
+                                act=ARGS.act,
+                                gui=ARGS.gui,
+                                record=ARGS.record_video
                                 )
     else:
         print("[ERROR] environment not yet implemented")
@@ -264,12 +273,12 @@ if __name__ == "__main__":
     }
 
     #### Set up the model parameters of the trainer's config ###
-    config["model"] = { 
+    config["model"] = {
         "custom_model": "cc_model",
     }
-    
+
     #### Set up the multiagent params of the trainer's config ##
-    config["multiagent"] = { 
+    config["multiagent"] = {
         "policies": {
             "pol0": (None, observer_space, action_space, {"agent_id": 0,}),
             "pol1": (None, observer_space, action_space, {"agent_id": 1,}),
