@@ -81,7 +81,7 @@ def run(
 
     #### Print out current git commit hash #####################
     if (platform == "linux" or platform == "darwin") and ('GITHUB_ACTIONS' not in os.environ.keys()):
-        git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip()
+        git_commit = subprocess.check_output(["git", "describe", "--tags", "--always"]).strip()
         with open(filename+'/git_commit.txt', 'w+') as f:
             f.write(str(git_commit))
 
@@ -91,13 +91,13 @@ def run(
     if act == ActionType.ONE_D_RPM or act == ActionType.ONE_D_DYN or act == ActionType.ONE_D_PID:
         print("\n\n\n[WARNING] Simplified 1D problem for debugging purposes\n\n\n")
     #### Errors ################################################
-        if not env in ['takeoff', 'hover']: 
+        if not env in ['takeoff', 'hover']:
             print("[ERROR] 1D action space is only compatible with Takeoff and HoverAviary")
             exit()
     if act == ActionType.TUN and env != 'tune' :
         print("[ERROR] ActionType.TUN is only compatible with TuneAviary")
         exit()
-    if algo in ['sac', 'td3', 'ddpg'] and cpu!=1: 
+    if algo in ['sac', 'td3', 'ddpg'] and cpu!=1:
         print("[ERROR] The selected algorithm does not support multiple environments")
         exit()
 
@@ -106,7 +106,7 @@ def run(
 
     env_name = env+"-aviary-v0"
     sa_env_kwargs = dict(aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=obs, act=act)
-    # train_env = gym.make(env_name, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=obs, act=act) # single environment instead of a vectorized one    
+    # train_env = gym.make(env_name, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=obs, act=act) # single environment instead of a vectorized one
     if env_name == "takeoff-aviary-v0":
         train_env = make_vec_env(TakeoffAviary,
                                  env_kwargs=sa_env_kwargs,
@@ -134,7 +134,7 @@ def run(
     print("[INFO] Action space:", train_env.action_space)
     print("[INFO] Observation space:", train_env.observation_space)
     # check_env(train_env, warn=True, skip_render_check=True)
-    
+
     #### On-policy algorithms ##################################
     onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
                            net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])]
@@ -206,32 +206,32 @@ def run(
                                                                 )
 
     #### Create eveluation environment #########################
-    if obs == ObservationType.KIN: 
+    if obs == ObservationType.KIN:
         eval_env = gym.make(env_name,
                             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
                             obs=obs,
                             act=act
                             )
     elif obs == ObservationType.RGB:
-        if env_name == "takeoff-aviary-v0": 
+        if env_name == "takeoff-aviary-v0":
             eval_env = make_vec_env(TakeoffAviary,
                                     env_kwargs=sa_env_kwargs,
                                     n_envs=1,
                                     seed=0
                                     )
-        if env_name == "hover-aviary-v0": 
+        if env_name == "hover-aviary-v0":
             eval_env = make_vec_env(HoverAviary,
                                     env_kwargs=sa_env_kwargs,
                                     n_envs=1,
                                     seed=0
                                     )
-        if env_name == "flythrugate-aviary-v0": 
+        if env_name == "flythrugate-aviary-v0":
             eval_env = make_vec_env(FlyThruGateAviary,
                                     env_kwargs=sa_env_kwargs,
                                     n_envs=1,
                                     seed=0
                                     )
-        if env_name == "tune-aviary-v0": 
+        if env_name == "tune-aviary-v0":
             eval_env = make_vec_env(TuneAviary,
                                     env_kwargs=sa_env_kwargs,
                                     n_envs=1,
@@ -275,8 +275,8 @@ if __name__ == "__main__":
     parser.add_argument('--algo',       default=DEFAULT_ALGO,        type=str,             choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],        help='RL agent (default: ppo)', metavar='')
     parser.add_argument('--obs',        default=DEFAULT_OBS,        type=ObservationType,                                                      help='Observation space (default: kin)', metavar='')
     parser.add_argument('--act',        default=DEFAULT_ACT,  type=ActionType,                                                           help='Action space (default: one_d_rpm)', metavar='')
-    parser.add_argument('--cpu',        default=DEFAULT_CPU,          type=int,                                                                  help='Number of training environments (default: 1)', metavar='')        
-    parser.add_argument('--steps',        default=DEFAULT_STEPS,          type=int,                                                                  help='Number of training time steps (default: 35000)', metavar='')        
+    parser.add_argument('--cpu',        default=DEFAULT_CPU,          type=int,                                                                  help='Number of training environments (default: 1)', metavar='')
+    parser.add_argument('--steps',        default=DEFAULT_STEPS,          type=int,                                                                  help='Number of training time steps (default: 35000)', metavar='')
     parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
     ARGS = parser.parse_args()
 

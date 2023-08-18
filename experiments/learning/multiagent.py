@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
     #### Print out current git commit hash #####################
     if platform == "linux" or platform == "darwin":
-        git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip()
+        git_commit = subprocess.check_output(["git", "describe", "--tags",  "--always"]).strip()
         with open(filename+'/git_commit.txt', 'w+') as f:
             f.write(str(git_commit))
 
