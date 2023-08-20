@@ -29,7 +29,6 @@ import ray
 from ray import tune
 from ray.tune import register_env
 from ray.rllib.agents import ppo
-from ray.rllib.agents.ppo import PPOTrainer, PPOTFPolicy
 from ray.rllib.examples.policy.random_policy import RandomPolicy
 from ray.rllib.utils.test_utils import check_learning_achieved
 from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
