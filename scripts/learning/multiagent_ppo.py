@@ -1,20 +1,3 @@
-"""Learning script for multi-agent problems.
-
-Agents are based on `ray[rllib]`'s implementation of PPO and use a custom centralized critic.
-
-Example
--------
-To run the script, type in a terminal:
-
-    $ python multiagent.py --num_drones <num_drones> --env <env> --obs <ObservationType> --act <ActionType> --algo <alg> --workers <num_workers>
-
-Notes
------
-Check Ray's status at:
-
-    http://127.0.0.1:8265
-
-"""
 import os
 import argparse
 from datetime import datetime
@@ -49,24 +32,11 @@ from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import (
 
 import shared_constants
 
-OWN_OBS_VEC_SIZE = None  # Modified at runtime
-ACTION_VEC_SIZE = None  # Modified at runtime
+OWN_OBS_VEC_SIZE = None
+ACTION_VEC_SIZE = None
 
 
-############################################################
 class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
-    """Multi-agent model that implements a centralized value function.
-
-    It assumes the observation is a dict with 'own_obs' and 'opponent_obs', the
-    former of which can be used for computing actions (i.e., decentralized
-    execution), and the latter for optimization (i.e., centralized learning).
-
-    This model has two parts:
-    - An action model that looks at just 'own_obs' to compute actions
-    - A value model that also looks at the 'opponent_obs' / 'opponent_action'
-      to compute the value (it does this by using the 'obs_flat' tensor).
-    """
-
     def __init__(self, obs_space, action_space, num_outputs, model_config, name):
         TorchModelV2.__init__(
             self, obs_space, action_space, num_outputs, model_config, name
@@ -95,7 +65,6 @@ class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
         return torch.reshape(value_out, [-1])
 
 
-############################################################
 class FillInActions(DefaultCallbacks):
     def on_postprocess_trajectory(
         self,
@@ -111,21 +80,18 @@ class FillInActions(DefaultCallbacks):
         to_update = postprocessed_batch[SampleBatch.CUR_OBS]
         other_id = 1 if agent_id == 0 else 0
         action_encoder = ModelCatalog.get_preprocessor_for_space(
-            # Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
             Box(-1, 1, (ACTION_VEC_SIZE,), np.float32)  # Bounded
         )
         _, opponent_batch = original_batches[other_id]
-        # opponent_actions = np.array([action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]]) # Unbounded
         opponent_actions = np.array(
             [
                 action_encoder.transform(np.clip(a, -1, 1))
                 for a in opponent_batch[SampleBatch.ACTIONS]
             ]
-        )  # Bounded
+        )
         to_update[:, -ACTION_VEC_SIZE:] = opponent_actions
 
 
-############################################################
 def central_critic_observer(agent_obs, **kw):
     new_obs = {
         0: {
@@ -144,12 +110,10 @@ def central_critic_observer(agent_obs, **kw):
 
 class MultiAgentPPO:
     action_space = None
-    action_vec_size = None
     args = None
     environment = None
     environment_name = None
     observer_space = None
-    own_obs_vec_size = None
     results_directory = None
     tuner_config = None
     tuner_results = None
@@ -262,7 +226,7 @@ class MultiAgentPPO:
     def build_action_constants(self, ARGS):
         #### Constants, and errors #################################
         if ARGS.obs == ObservationType.KIN:
-            self.own_obs_vec_size = 12
+            OWN_OBS_VEC_SIZE = 12
         elif ARGS.obs == ObservationType.RGB:
             print(
                 "[ERROR] ObservationType.RGB for multi-agent systems not yet implemented"
@@ -276,11 +240,11 @@ class MultiAgentPPO:
             ActionType.ONE_D_DYN,
             ActionType.ONE_D_PID,
         ]:
-            self.action_vec_size = 1
+            ACTION_VEC_SIZE = 1
         elif ARGS.act in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
-            self.action_vec_size = 4
+            ACTION_VEC_SIZE = 4
         elif ARGS.act == ActionType.PID:
-            self.action_vec_size = 3
+            ACTION_VEC_SIZE = 3
         else:
             print("[ERROR] unknown ActionType")
             exit()
