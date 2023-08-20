@@ -13,10 +13,8 @@ import os
 import time
 from datetime import datetime
 import argparse
-import re
 import numpy as np
 import gym
-import torch
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3 import PPO
 from stable_baselines3 import DDPG
