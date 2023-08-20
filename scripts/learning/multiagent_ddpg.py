@@ -33,7 +33,7 @@ from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import (
 import shared_constants
 
 OWN_OBSERVATION_VEC_SIZE = 12
-ACTION_VECTOR_SIZE = None
+ACTION_VECTOR_SIZE = 4
 
 
 class CentralizedCriticModel(TorchModelV2, nn.Module):
