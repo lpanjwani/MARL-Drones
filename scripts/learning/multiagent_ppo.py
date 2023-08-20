@@ -152,6 +152,13 @@ class MultiAgentPPO:
             metavar="",
         )
         parser.add_argument(
+            "--obs",
+            default="kin",
+            type=ObservationType,
+            help="Observation space (default: kin)",
+            metavar="",
+        )
+        parser.add_argument(
             "--act",
             default=ActionType.RPM,
             type=ActionType,
@@ -189,9 +196,6 @@ class MultiAgentPPO:
         )
 
         ARGS = parser.parse_args()
-
-        # Fix to KIN for now
-        ARGS.obs = ObservationType.KIN
 
         return ARGS
 
