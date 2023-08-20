@@ -133,7 +133,7 @@ class MultiAgentPPO:
         self.shutdown_ray()
 
     # Parse CLI arguments
-    def parse_cli_arguments():
+    def parse_cli_arguments(self):
         parser = argparse.ArgumentParser()
         parser.add_argument(
             "--num_drones",
@@ -195,7 +195,7 @@ class MultiAgentPPO:
         return ARGS
 
     # Create results directory with timestamp
-    def create_results_directory(ARGS):
+    def create_results_directory(self, ARGS):
         filename = (
             os.path.dirname(os.path.abspath(__file__))
             + "/results/save-"
