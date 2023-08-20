@@ -238,7 +238,7 @@ class MultiAgentPPO:
         ray.init(ignore_reinit_error=True)
 
     # Shutdown Ray Server
-    def shutdown_ray():
+    def shutdown_ray(self):
         ray.shutdown()
 
     def register_gym_env(self, ARGS):
