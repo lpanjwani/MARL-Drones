@@ -66,11 +66,6 @@ import shared_constants
 OWN_OBS_VEC_SIZE = None  # Modified at runtime
 ACTION_VEC_SIZE = None  # Modified at runtime
 
-#### Useful links ##########################################
-# Workflow: github.com/ray-project/ray/blob/master/doc/source/rllib-training.rst
-# ENV_STATE example: github.com/ray-project/ray/blob/master/rllib/examples/env/two_step_game.py
-# Competing policies example: github.com/ray-project/ray/blob/master/rllib/examples/rock_paper_scissors_multiagent.py
-
 
 ############################################################
 class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
@@ -350,6 +345,7 @@ if __name__ == "__main__":
     else:
         print("[ERROR] environment not yet implemented")
         exit()
+
     observer_space = Dict(
         {
             "own_obs": temp_env.observation_space[0],
@@ -367,9 +363,7 @@ if __name__ == "__main__":
     # you can defer environment initialization until ``reset()`` is called
 
     #### Set up the trainer's config ###########################
-    config = (
-        ppo.DEFAULT_CONFIG.copy()
-    )  # For the default config, see github.com/ray-project/ray/blob/master/rllib/agents/trainer.py
+    config = ppo.DEFAULT_CONFIG.copy()
     config = {
         "env": temp_env_name,
         "num_workers": 0 + ARGS.workers,
@@ -414,21 +408,21 @@ if __name__ == "__main__":
 
     #### Ray Tune stopping conditions ##########################
     stop = {
-        "timesteps_total": 120000,  # 100000 ~= 10'
-        # "episode_reward_mean": 0,
+        # "timesteps_total": 120000,  # 100000 ~= 10'
+        "episode_reward_mean": 0,
         # "training_iteration": 0,
     }
 
     #### Train #################################################
     results = tune.run(
-        "PPO",
+        PPOTrainer,
         stop=stop,
         config=config,
         verbose=True,
         checkpoint_at_end=True,
         local_dir=filename,
     )
-    # check_learning_achieved(results, 1.0)
+    check_learning_achieved(results, 1.0)
 
     #### Save agent ############################################
     checkpoints = results.get_trial_checkpoints_paths(
