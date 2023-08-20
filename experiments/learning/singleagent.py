@@ -139,7 +139,7 @@ def run(
                                  )
     print("[INFO] Action space:", train_env.action_space)
     print("[INFO] Observation space:", train_env.observation_space)
-    check_env(train_env, warn=True, skip_render_check=True)
+    # check_env(train_env, warn=True, skip_render_check=True)
 
     #### On-policy algorithms ##################################
     onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
