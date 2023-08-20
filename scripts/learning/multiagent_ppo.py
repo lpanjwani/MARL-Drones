@@ -124,6 +124,7 @@ class MultiAgentPPO:
         self.results_directory = self.create_results_directory(self.args)
         self.build_action_vector_size(self.args)
         self.init_ray()
+        self.register_gym_environment()
         self.register_spaces()
         self.build_tuner_config(self.args)
         self.build_tuner_stop_conditions()
@@ -241,16 +242,16 @@ class MultiAgentPPO:
     def shutdown_ray(self):
         ray.shutdown()
 
-    def register_gym_env(self, ARGS):
+    def register_gym_environment(self, ARGS):
         # Register the custom centralized critic model
         ModelCatalog.register_custom_model("central_a2c_model", CentralizedCriticModel)
 
         if ARGS.env == "flock":
-            self.register_flock_environment(ARGS)
+            return self.register_flock_environment(ARGS)
         elif ARGS.env == "leaderfollower":
-            self.register_leaderfollower_environment(ARGS)
+            return self.register_leaderfollower_environment(ARGS)
         elif ARGS.env == "meetup":
-            self.register_meetup_environment(ARGS)
+            return self.register_meetup_environment(ARGS)
         else:
             print("[ERROR] environment not yet implemented")
             exit()
