@@ -124,7 +124,7 @@ class MultiAgentDDPG:
         self.results_directory = self.create_results_directory(self.args)
         self.build_action_vector_size(self.args)
         self.init_ray()
-        self.register_gym_environment()
+        self.register_gym_environment(self.args)
         self.register_spaces()
         self.build_tuner_config(self.args)
         self.build_tuner_stop_conditions()
