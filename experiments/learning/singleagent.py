@@ -45,6 +45,8 @@ from stable_baselines3.td3 import MlpPolicy as td3ddpgMlpPolicy
 from stable_baselines3.td3 import CnnPolicy as td3ddpgCnnPolicy
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback, StopTrainingOnRewardThreshold
 
+from gym_pybullet_drones.utils.utils import str2bool
+
 from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
 from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
 from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGateAviary
@@ -63,6 +65,8 @@ DEFAULT_ACT = ActionType('one_d_rpm')
 DEFAULT_CPU = 1
 DEFAULT_STEPS = 35000
 DEFAULT_OUTPUT_FOLDER = 'results'
+DEFAULT_GUI = False
+DEFAULT_RECORD_VIDEO = True
 
 def run(
     env=DEFAULT_ENV,
@@ -71,7 +75,9 @@ def run(
     act=DEFAULT_ACT,
     cpu=DEFAULT_CPU,
     steps=DEFAULT_STEPS,
-    output_folder=DEFAULT_OUTPUT_FOLDER
+    output_folder=DEFAULT_OUTPUT_FOLDER,
+    gui = DEFAULT_GUI,
+    record_video = DEFAULT_RECORD_VIDEO,
 ):
 
     #### Save directory ########################################
@@ -105,7 +111,7 @@ def run(
     # exit()
 
     env_name = env+"-aviary-v0"
-    sa_env_kwargs = dict(aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=obs, act=act)
+    sa_env_kwargs = dict(aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=obs, act=act, gui=gui, record=record_video)
     # train_env = gym.make(env_name, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=obs, act=act) # single environment instead of a vectorized one
     if env_name == "takeoff-aviary-v0":
         train_env = make_vec_env(TakeoffAviary,
@@ -133,7 +139,7 @@ def run(
                                  )
     print("[INFO] Action space:", train_env.action_space)
     print("[INFO] Observation space:", train_env.observation_space)
-    # check_env(train_env, warn=True, skip_render_check=True)
+    check_env(train_env, warn=True, skip_render_check=True)
 
     #### On-policy algorithms ##################################
     onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
@@ -278,6 +284,8 @@ if __name__ == "__main__":
     parser.add_argument('--cpu',        default=DEFAULT_CPU,          type=int,                                                                  help='Number of training environments (default: 1)', metavar='')
     parser.add_argument('--steps',        default=DEFAULT_STEPS,          type=int,                                                                  help='Number of training time steps (default: 35000)', metavar='')
     parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
+    parser.add_argument('--gui',                default=True,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--record_video',       default=False,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))
