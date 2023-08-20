@@ -46,8 +46,9 @@ DEFAULT_GUI = False
 DEFAULT_PLOT = True
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_RECORD_VIDEO = True
+DEFAULT_COLAB = False
 
-def run(exp, gui=DEFAULT_GUI, plot=DEFAULT_PLOT, output_folder=DEFAULT_OUTPUT_FOLDER, record_video=DEFAULT_RECORD_VIDEO):
+def run(exp, gui=DEFAULT_GUI, plot=DEFAULT_PLOT, output_folder=DEFAULT_OUTPUT_FOLDER, record_video=DEFAULT_RECORD_VIDEO, colab=DEFAULT_COLAB):
     #### Load the model from file ##############################
     algo = exp.split("-")[2]
 
@@ -99,7 +100,7 @@ def run(exp, gui=DEFAULT_GUI, plot=DEFAULT_PLOT, output_folder=DEFAULT_OUTPUT_FO
                         obs=OBS,
                         act=ACT
                         )
-    logger = Logger(logging_freq_hz=int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS),
+    logger = Logger(logging_freq_hz=int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS, colab=colab),
                     num_drones=1,
                     output_folder=output_folder
                     )
@@ -138,6 +139,7 @@ if __name__ == "__main__":
     parser.add_argument('--plot',               default=DEFAULT_PLOT,       type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
     parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
     parser.add_argument('--record_video',       default=False,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
+    parser.add_argument('--colab',              default=DEFAULT_COLAB, type=bool,           help='Whether example is being run by a notebook (default: "False")', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))
