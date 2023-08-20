@@ -12,32 +12,22 @@ To run the script, type in a terminal:
 import os
 import time
 import argparse
-from datetime import datetime
-import pdb
-import math
 import numpy as np
 import pybullet as p
-import pickle
 import matplotlib.pyplot as plt
 import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
 from gym.spaces import Box, Dict
 import torch
 import torch.nn as nn
 import ray
-from ray import tune
 from ray.tune import register_env
 from ray.rllib.agents import ppo
-from ray.rllib.examples.policy.random_policy import RandomPolicy
-from ray.rllib.utils.test_utils import check_learning_achieved
 from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
 from ray.rllib.agents.callbacks import DefaultCallbacks
 from ray.rllib.models.torch.fcnet import FullyConnectedNetwork
 from ray.rllib.models import ModelCatalog
 from ray.rllib.policy.sample_batch import SampleBatch
 
-from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.multi_agent_rl.FlockAviary import FlockAviary
 from gym_pybullet_drones.envs.multi_agent_rl.LeaderFollowerAviary import LeaderFollowerAviary
 from gym_pybullet_drones.envs.multi_agent_rl.MeetupAviary import MeetupAviary

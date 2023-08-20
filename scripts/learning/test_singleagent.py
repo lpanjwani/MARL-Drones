@@ -18,25 +18,12 @@ import numpy as np
 import gym
 import torch
 from stable_baselines3.common.env_checker import check_env
-from stable_baselines3 import A2C
 from stable_baselines3 import PPO
-from stable_baselines3 import SAC
-from stable_baselines3 import TD3
 from stable_baselines3 import DDPG
-from stable_baselines3.common.policies import ActorCriticPolicy as a2cppoMlpPolicy
-from stable_baselines3.common.policies import ActorCriticCnnPolicy as a2cppoCnnPolicy
-from stable_baselines3.sac.policies import SACPolicy as sacMlpPolicy
-from stable_baselines3.sac import CnnPolicy as sacCnnPolicy
-from stable_baselines3.td3 import MlpPolicy as td3ddpgMlpPolicy
-from stable_baselines3.td3 import CnnPolicy as td3ddpgCnnPolicy
 from stable_baselines3.common.evaluation import evaluate_policy
 
 from gym_pybullet_drones.utils.utils import sync
 from gym_pybullet_drones.utils.Logger import Logger
-from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
-from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
-from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGateAviary
-from gym_pybullet_drones.envs.single_agent_rl.TuneAviary import TuneAviary
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
 from gym_pybullet_drones.utils.utils import sync, str2bool
 
@@ -58,14 +45,9 @@ def run(exp, gui=DEFAULT_GUI, plot=DEFAULT_PLOT, output_folder=DEFAULT_OUTPUT_FO
         path = exp+'/best_model.zip'
     else:
         print("[ERROR]: no model under the specified path", exp)
-    if algo == 'a2c':
-        model = A2C.load(path)
+
     if algo == 'ppo':
         model = PPO.load(path)
-    if algo == 'sac':
-        model = SAC.load(path)
-    if algo == 'td3':
-        model = TD3.load(path)
     if algo == 'ddpg':
         model = DDPG.load(path)
 
@@ -119,17 +101,10 @@ def run(exp, gui=DEFAULT_GUI, plot=DEFAULT_PLOT, output_folder=DEFAULT_OUTPUT_FO
                        control=np.zeros(12)
                        )
         sync(np.floor(i*test_env.AGGR_PHY_STEPS), start, test_env.TIMESTEP)
-        # if done: obs = test_env.reset() # OPTIONAL EPISODE HALT
     test_env.close()
-    logger.save_as_csv("sa") # Optional CSV save
+    logger.save_as_csv("sa")
     if plot:
         logger.plot()
-
-    # with np.load(exp+'/evaluations.npz') as data:
-    #     print(data.files)
-    #     print(data['timesteps'])
-    #     print(data['results'])
-    #     print(data['ep_lengths'])
 
 if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##

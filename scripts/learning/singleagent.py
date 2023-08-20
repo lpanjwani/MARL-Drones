@@ -1,6 +1,6 @@
 """Learning script for single agent problems.
 
-Agents are based on `stable_baselines3`'s implementation of A2C, PPO SAC, TD3, DDPG.
+Agents are based on `stable_baselines3`'s implementation of  PPO, DDPG.
 
 Example
 -------
@@ -20,7 +20,6 @@ To check the tensorboard results at:
 
 """
 import os
-import time
 from datetime import datetime
 from sys import platform
 import argparse
@@ -30,20 +29,14 @@ import gym
 import torch
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.cmd_util import make_vec_env # Module cmd_util will be renamed to env_util https://github.com/DLR-RM/stable-baselines3/pull/197
-from stable_baselines3.common.vec_env import SubprocVecEnv, VecTransposeImage
-from stable_baselines3.common.utils import set_random_seed
-from stable_baselines3 import A2C
+from stable_baselines3.common.vec_env import VecTransposeImage
 from stable_baselines3 import PPO
-from stable_baselines3 import SAC
-from stable_baselines3 import TD3
 from stable_baselines3 import DDPG
 from stable_baselines3.common.policies import ActorCriticPolicy as a2cppoMlpPolicy
 from stable_baselines3.common.policies import ActorCriticCnnPolicy as a2cppoCnnPolicy
-from stable_baselines3.sac.policies import SACPolicy as sacMlpPolicy
-from stable_baselines3.sac import CnnPolicy as sacCnnPolicy
 from stable_baselines3.td3 import MlpPolicy as td3ddpgMlpPolicy
 from stable_baselines3.td3 import CnnPolicy as td3ddpgCnnPolicy
-from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback, StopTrainingOnRewardThreshold
+from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 
 from gym_pybullet_drones.utils.utils import str2bool
 
@@ -145,18 +138,7 @@ def run(
     onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
                            net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])]
                            ) # or None
-    if algo == 'a2c':
-        model = A2C(a2cppoMlpPolicy,
-                    train_env,
-                    policy_kwargs=onpolicy_kwargs,
-                    tensorboard_log=filename+'/tb/',
-                    verbose=1
-                    ) if obs == ObservationType.KIN else A2C(a2cppoCnnPolicy,
-                                                                  train_env,
-                                                                  policy_kwargs=onpolicy_kwargs,
-                                                                  tensorboard_log=filename+'/tb/',
-                                                                  verbose=1
-                                                                  )
+
     if algo == 'ppo':
         model = PPO(a2cppoMlpPolicy,
                     train_env,
@@ -174,30 +156,6 @@ def run(
     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
                             net_arch=[512, 512, 256, 128]
                             ) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
-    if algo == 'sac':
-        model = SAC(sacMlpPolicy,
-                    train_env,
-                    policy_kwargs=offpolicy_kwargs,
-                    tensorboard_log=filename+'/tb/',
-                    verbose=1
-                    ) if obs==ObservationType.KIN else SAC(sacCnnPolicy,
-                                                                train_env,
-                                                                policy_kwargs=offpolicy_kwargs,
-                                                                tensorboard_log=filename+'/tb/',
-                                                                verbose=1
-                                                                )
-    if algo == 'td3':
-        model = TD3(td3ddpgMlpPolicy,
-                    train_env,
-                    policy_kwargs=offpolicy_kwargs,
-                    tensorboard_log=filename+'/tb/',
-                    verbose=1
-                    ) if obs==ObservationType.KIN else TD3(td3ddpgCnnPolicy,
-                                                                train_env,
-                                                                policy_kwargs=offpolicy_kwargs,
-                                                                tensorboard_log=filename+'/tb/',
-                                                                verbose=1
-                                                                )
     if algo == 'ddpg':
         model = DDPG(td3ddpgMlpPolicy,
                     train_env,
@@ -278,7 +236,7 @@ if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning experiments script')
     parser.add_argument('--env',        default=DEFAULT_ENV,      type=str,             choices=['takeoff', 'hover', 'flythrugate', 'tune'], help='Task (default: hover)', metavar='')
-    parser.add_argument('--algo',       default=DEFAULT_ALGO,        type=str,             choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],        help='RL agent (default: ppo)', metavar='')
+    parser.add_argument('--algo',       default=DEFAULT_ALGO,        type=str,             choices=['ppo','ddpg'],        help='RL agent (default: ppo)', metavar='')
     parser.add_argument('--obs',        default=DEFAULT_OBS,        type=ObservationType,                                                      help='Observation space (default: kin)', metavar='')
     parser.add_argument('--act',        default=DEFAULT_ACT,  type=ActionType,                                                           help='Action space (default: one_d_rpm)', metavar='')
     parser.add_argument('--cpu',        default=DEFAULT_CPU,          type=int,                                                                  help='Number of training environments (default: 1)', metavar='')
