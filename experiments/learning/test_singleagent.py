@@ -42,11 +42,12 @@ from gym_pybullet_drones.utils.utils import sync, str2bool
 
 import shared_constants
 
-DEFAULT_GUI = True
+DEFAULT_GUI = False
 DEFAULT_PLOT = True
 DEFAULT_OUTPUT_FOLDER = 'results'
+DEFAULT_RECORD_VIDEO = True
 
-def run(exp, gui=DEFAULT_GUI, plot=DEFAULT_PLOT, output_folder=DEFAULT_OUTPUT_FOLDER):
+def run(exp, gui=DEFAULT_GUI, plot=DEFAULT_PLOT, output_folder=DEFAULT_OUTPUT_FOLDER, record_video=DEFAULT_RECORD_VIDEO):
     #### Load the model from file ##############################
     algo = exp.split("-")[2]
 
@@ -93,7 +94,7 @@ def run(exp, gui=DEFAULT_GUI, plot=DEFAULT_PLOT, output_folder=DEFAULT_OUTPUT_FO
     #### Show, record a video, and log the model's performance #
     test_env = gym.make(env_name,
                         gui=gui,
-                        record=False,
+                        record=record_video,
                         aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
                         obs=OBS,
                         act=ACT
@@ -136,6 +137,7 @@ if __name__ == "__main__":
     parser.add_argument('--gui',            default=DEFAULT_GUI,               type=str2bool,      help='Whether to use PyBullet GUI (default: False)', metavar='')
     parser.add_argument('--plot',               default=DEFAULT_PLOT,       type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
     parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
+    parser.add_argument('--record_video',       default=False,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))
