@@ -32,8 +32,8 @@ from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import (
 
 import shared_constants
 
-OWN_OBS_VEC_SIZE = None
-ACTION_VEC_SIZE = None
+OWN_OBSERVATION_VEC_SIZE = 12
+ACTION_VECTOR_SIZE = None
 
 
 class CentralizedCriticModel(TorchModelV2, nn.Module):
@@ -43,7 +43,7 @@ class CentralizedCriticModel(TorchModelV2, nn.Module):
         )
         nn.Module.__init__(self)
         self.action_model = FullyConnectedNetwork(
-            Box(low=-1, high=1, shape=(OWN_OBS_VEC_SIZE,)),
+            Box(low=-1, high=1, shape=(OWN_OBSERVATION_VEC_SIZE,)),
             action_space,
             num_outputs,
             model_config,
@@ -80,7 +80,7 @@ class FillInActions(DefaultCallbacks):
         to_update = postprocessed_batch[SampleBatch.CUR_OBS]
         other_id = 1 if agent_id == 0 else 0
         action_encoder = ModelCatalog.get_preprocessor_for_space(
-            Box(-1, 1, (ACTION_VEC_SIZE,), np.float32)  # Bounded
+            Box(-1, 1, (ACTION_VECTOR_SIZE,), np.float32)  # Bounded
         )
         _, opponent_batch = original_batches[other_id]
         opponent_actions = np.array(
@@ -89,7 +89,7 @@ class FillInActions(DefaultCallbacks):
                 for a in opponent_batch[SampleBatch.ACTIONS]
             ]
         )
-        to_update[:, -ACTION_VEC_SIZE:] = opponent_actions
+        to_update[:, -ACTION_VECTOR_SIZE:] = opponent_actions
 
 
 def central_critic_observer(agent_obs, **kw):
@@ -97,12 +97,12 @@ def central_critic_observer(agent_obs, **kw):
         0: {
             "own_obs": agent_obs[0],
             "opponent_obs": agent_obs[1],
-            "opponent_action": np.zeros(ACTION_VEC_SIZE),  # Filled in by FillInActions
+            "opponent_action": np.zeros(ACTION_VECTOR_SIZE),
         },
         1: {
             "own_obs": agent_obs[1],
             "opponent_obs": agent_obs[0],
-            "opponent_action": np.zeros(ACTION_VEC_SIZE),  # Filled in by FillInActions
+            "opponent_action": np.zeros(ACTION_VECTOR_SIZE),
         },
     }
     return new_obs
@@ -122,7 +122,7 @@ class MultiAgentPPO:
     def __init__(self):
         self.args = self.parse_cli_arguments()
         self.results_directory = self.create_results_directory(self.args)
-        self.build_action_constants(self.args)
+        self.build_action_vector_size(self.args)
         self.init_ray()
         self.register_spaces(self.args)
         self.build_tuner_config(self.args)
@@ -134,9 +134,7 @@ class MultiAgentPPO:
 
     # Parse CLI arguments
     def parse_cli_arguments():
-        parser = argparse.ArgumentParser(
-            description="Multi-agent reinforcement learning experiments script"
-        )
+        parser = argparse.ArgumentParser()
         parser.add_argument(
             "--num_drones",
             default=2,
@@ -150,13 +148,6 @@ class MultiAgentPPO:
             type=str,
             choices=["leaderfollower", "flock", "meetup"],
             help="Task (default: leaderfollower)",
-            metavar="",
-        )
-        parser.add_argument(
-            "--obs",
-            default="kin",
-            type=ObservationType,
-            help="Observation space (default: kin)",
             metavar="",
         )
         parser.add_argument(
@@ -198,6 +189,9 @@ class MultiAgentPPO:
 
         ARGS = parser.parse_args()
 
+        # Fix to KIN for now
+        ARGS.obs = ObservationType.KIN
+
         return ARGS
 
     # Create results directory with timestamp
@@ -223,28 +217,17 @@ class MultiAgentPPO:
         return filename
 
     # Build action constants
-    def build_action_constants(self, ARGS):
-        #### Constants, and errors #################################
-        if ARGS.obs == ObservationType.KIN:
-            OWN_OBS_VEC_SIZE = 12
-        elif ARGS.obs == ObservationType.RGB:
-            print(
-                "[ERROR] ObservationType.RGB for multi-agent systems not yet implemented"
-            )
-            exit()
-        else:
-            print("[ERROR] unknown ObservationType")
-            exit()
+    def build_action_vector_size(self, ARGS):
         if ARGS.act in [
             ActionType.ONE_D_RPM,
             ActionType.ONE_D_DYN,
             ActionType.ONE_D_PID,
         ]:
-            ACTION_VEC_SIZE = 1
+            ACTION_VECTOR_SIZE = 1
         elif ARGS.act in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
-            ACTION_VEC_SIZE = 4
+            ACTION_VECTOR_SIZE = 4
         elif ARGS.act == ActionType.PID:
-            ACTION_VEC_SIZE = 3
+            ACTION_VECTOR_SIZE = 3
         else:
             print("[ERROR] unknown ActionType")
             exit()
