@@ -197,9 +197,6 @@ class MultiAgentDDPG:
 
         ARGS = parser.parse_args()
 
-        # Fix to KIN for now
-        ARGS["obs"] = ObservationType.KIN
-
         return ARGS
 
     # Create results directory with timestamp
