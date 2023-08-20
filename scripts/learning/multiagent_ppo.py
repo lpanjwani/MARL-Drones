@@ -36,7 +36,7 @@ OWN_OBS_VEC_SIZE = None
 ACTION_VEC_SIZE = None
 
 
-class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
+class CentralizedCriticModel(TorchModelV2, nn.Module):
     def __init__(self, obs_space, action_space, num_outputs, model_config, name):
         TorchModelV2.__init__(
             self, obs_space, action_space, num_outputs, model_config, name
@@ -260,9 +260,7 @@ class MultiAgentPPO:
 
     def register_gym_env(self, ARGS):
         # Register the custom centralized critic model
-        ModelCatalog.register_custom_model(
-            "cc_model", CustomTorchCentralizedCriticModel
-        )
+        ModelCatalog.register_custom_model("central_a2c_model", CentralizedCriticModel)
 
         if ARGS.env == "flock":
             self.register_flock_environment(ARGS)
@@ -364,7 +362,7 @@ class MultiAgentPPO:
         }
 
         self.tuner_config["model"] = {
-            "custom_model": "cc_model",
+            "custom_model": "central_a2c_model",
         }
 
         self.tuner_config["multiagent"] = {
