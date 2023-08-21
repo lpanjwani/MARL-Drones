@@ -235,7 +235,7 @@ class MultiAgentPPOTester:
 
         self.trainer_config = {
             "env": self.environment_name,
-            "num_workers": 0 + ARGS.workers,
+            "num_workers": 0,
             "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")),
             "batch_mode": "complete_episodes",
             "callbacks": FillInActions,
