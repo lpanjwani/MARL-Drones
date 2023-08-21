@@ -100,12 +100,12 @@ class MultiAgentDDPGTester:
 
     def parse_arguments_pattern(self, ARGS):
         self.num_drones = int(ARGS.exp.split("-")[2])
-
         self.action_name = ARGS.exp.split("-")[5]
         self.action = [
             action for action in ActionType if action.value == self.action_name
         ]
         self.action = self.action.pop()
+        self.environment_name = ARGS.exp.split("-")[1]
 
     # Build action constants
     def build_action_vector_size(self, ARGS):
@@ -136,11 +136,11 @@ class MultiAgentDDPGTester:
         # Register the custom centralized critic model
         ModelCatalog.register_custom_model("central_a2c_model", CentralizedCriticModel)
 
-        if ARGS.env == "flock":
+        if self.environment_name == "flock":
             return self.register_flock_environment(ARGS)
-        elif ARGS.env == "leaderfollower":
+        elif self.environment_name == "leaderfollower":
             return self.register_leaderfollower_environment(ARGS)
-        elif ARGS.env == "meetup":
+        elif self.environment_name == "meetup":
             return self.register_meetup_environment(ARGS)
         else:
             print("[ERROR] environment not yet implemented")
