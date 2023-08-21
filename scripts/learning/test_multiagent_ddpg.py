@@ -22,6 +22,7 @@ from gym_pybullet_drones.envs.multi_agent_rl.LeaderFollowerAviary import (
 from gym_pybullet_drones.envs.multi_agent_rl.MeetupAviary import MeetupAviary
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import (
     ActionType,
+    ObservationType,
 )
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
@@ -42,6 +43,7 @@ class MultiAgentDDPGTester:
     environment = None
     environment_name = None
     num_drones = None
+    observe_mode = None
     observer_space = None
     trainer = None
     trainer_config = None
@@ -99,13 +101,18 @@ class MultiAgentDDPGTester:
         return ARGS
 
     def parse_arguments_pattern(self, ARGS):
+        self.environment_name = ARGS.exp.split("-")[1]
         self.num_drones = int(ARGS.exp.split("-")[2])
+        self.observe_mode = (
+            ObservationType.KIN
+            if ARGS.exp.split("-")[4] == "kin"
+            else ObservationType.RGB
+        )
         self.action_name = ARGS.exp.split("-")[5]
         self.action = [
             action for action in ActionType if action.value == self.action_name
         ]
         self.action = self.action.pop()
-        self.environment_name = ARGS.exp.split("-")[1]
 
     # Build action constants
     def build_action_vector_size(self, ARGS):
@@ -154,16 +161,16 @@ class MultiAgentDDPGTester:
             lambda _: FlockAviary(
                 num_drones=self.num_drones,
                 aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-                obs=ARGS.obs,
-                act=ARGS.act,
+                obs=self.observe_mode,
+                act=self.action,
             ),
         )
 
         self.environment = FlockAviary(
             num_drones=self.num_drones,
             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-            obs=ARGS.obs,
-            act=ARGS.act,
+            obs=self.observe_mode,
+            act=self.action,
             gui=ARGS.gui,
             record=ARGS.record_video,
         )
@@ -176,16 +183,16 @@ class MultiAgentDDPGTester:
             lambda _: LeaderFollowerAviary(
                 num_drones=self.num_drones,
                 aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-                obs=ARGS.obs,
-                act=ARGS.act,
+                obs=self.observe_mode,
+                act=self.action,
             ),
         )
 
         self.environment = LeaderFollowerAviary(
             num_drones=self.num_drones,
             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-            obs=ARGS.obs,
-            act=ARGS.act,
+            obs=self.observe_mode,
+            act=self.action,
             gui=ARGS.gui,
             record=ARGS.record_video,
         )
@@ -198,16 +205,16 @@ class MultiAgentDDPGTester:
             lambda _: MeetupAviary(
                 num_drones=self.num_drones,
                 aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-                obs=ARGS.obs,
-                act=ARGS.act,
+                obs=self.observe_mode,
+                act=self.action,
             ),
         )
 
         self.environment = MeetupAviary(
             num_drones=self.num_drones,
             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-            obs=ARGS.obs,
-            act=ARGS.act,
+            obs=self.observe_mode,
+            act=self.action,
             gui=ARGS.gui,
             record=ARGS.record_video,
         )
