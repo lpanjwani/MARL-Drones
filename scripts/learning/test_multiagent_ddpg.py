@@ -67,6 +67,13 @@ class MultiAgentDDPGTester:
             metavar="",
         )
         parser.add_argument(
+            "--act",
+            default=ActionType.RPM,
+            type=ActionType,
+            help="Action space (default: RPM)",
+            metavar="",
+        )
+        parser.add_argument(
             "--colab",
             default=DEFAULT_COLAB,
             type=bool,
