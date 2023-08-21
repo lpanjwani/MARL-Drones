@@ -98,7 +98,7 @@ class MultiAgentDDPGTester:
         self.action = [
             action for action in ActionType if action.value == self.action_name
         ]
-        self.action = self.ACT.pop()
+        self.action = self.action.pop()
 
     # Build action constants
     def build_action_vector_size(self, ARGS):
