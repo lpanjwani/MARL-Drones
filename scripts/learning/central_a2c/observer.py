@@ -1,3 +1,5 @@
+import numpy as np
+
 ACTION_VECTOR_SIZE = 4
 
 

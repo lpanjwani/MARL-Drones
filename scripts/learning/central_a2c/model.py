@@ -1,7 +1,6 @@
 import gym
 from gym.spaces import Box
 import torch
-import numpy as np
 import torch.nn as nn
 import ray
 from ray.rllib.models.torch.fcnet import FullyConnectedNetwork
