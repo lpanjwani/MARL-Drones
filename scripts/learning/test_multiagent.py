@@ -1,14 +1,3 @@
-"""Test script for multiagent problems.
-
-This scripts runs the best model found by one of the executions of `multiagent.py`
-
-Example
--------
-To run the script, type in a terminal:
-
-    $ python test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<time_date>
-
-"""
 import os
 import time
 import argparse
@@ -42,81 +31,10 @@ from gym_pybullet_drones.utils.utils import sync, str2bool
 
 import shared_constants
 
-OWN_OBS_VEC_SIZE = None  # Modified at runtime
-ACTION_VEC_SIZE = None  # Modified at runtime
+OWN_OBSERVATION_VEC_SIZE = 12
+ACTION_VECTOR_SIZE = 4
+
 DEFAULT_COLAB = False
-
-
-############################################################
-class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
-    """Multi-agent model that implements a centralized value function.
-
-    It assumes the observation is a dict with 'own_obs' and 'opponent_obs', the
-    former of which can be used for computing actions (i.e., decentralized
-    execution), and the latter for optimization (i.e., centralized learning).
-
-    This model has two parts:
-    - An action model that looks at just 'own_obs' to compute actions
-    - A value model that also looks at the 'opponent_obs' / 'opponent_action'
-      to compute the value (it does this by using the 'obs_flat' tensor).
-    """
-
-    def __init__(self, obs_space, action_space, num_outputs, model_config, name):
-        TorchModelV2.__init__(
-            self, obs_space, action_space, num_outputs, model_config, name
-        )
-        nn.Module.__init__(self)
-        self.action_model = FullyConnectedNetwork(
-            Box(low=-1, high=1, shape=(OWN_OBS_VEC_SIZE,)),
-            action_space,
-            num_outputs,
-            model_config,
-            name + "_action",
-        )
-        self.value_model = FullyConnectedNetwork(
-            obs_space, action_space, 1, model_config, name + "_vf"
-        )
-        self._model_in = None
-
-    def forward(self, input_dict, state, seq_lens):
-        self._model_in = [input_dict["obs_flat"], state, seq_lens]
-        return self.action_model({"obs": input_dict["obs"]["own_obs"]}, state, seq_lens)
-
-    def value_function(self):
-        value_out, _ = self.value_model(
-            {"obs": self._model_in[0]}, self._model_in[1], self._model_in[2]
-        )
-        return torch.reshape(value_out, [-1])
-
-
-############################################################
-class FillInActions(DefaultCallbacks):
-    def on_postprocess_trajectory(
-        self,
-        worker,
-        episode,
-        agent_id,
-        policy_id,
-        policies,
-        postprocessed_batch,
-        original_batches,
-        **kwargs
-    ):
-        to_update = postprocessed_batch[SampleBatch.CUR_OBS]
-        other_id = 1 if agent_id == 0 else 0
-        action_encoder = ModelCatalog.get_preprocessor_for_space(
-            # Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
-            Box(-1, 1, (ACTION_VEC_SIZE,), np.float32)  # Bounded
-        )
-        _, opponent_batch = original_batches[other_id]
-        # opponent_actions = np.array([action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]]) # Unbounded
-        opponent_actions = np.array(
-            [
-                action_encoder.transform(np.clip(a, -1, 1))
-                for a in opponent_batch[SampleBatch.ACTIONS]
-            ]
-        )  # Bounded
-        to_update[:, -ACTION_VEC_SIZE:] = opponent_actions
 
 
 ############################################################
@@ -125,12 +43,16 @@ def central_critic_observer(agent_obs, **kw):
         0: {
             "own_obs": agent_obs[0],
             "opponent_obs": agent_obs[1],
-            "opponent_action": np.zeros(ACTION_VEC_SIZE),  # Filled in by FillInActions
+            "opponent_action": np.zeros(
+                ACTION_VECTOR_SIZE
+            ),  # Filled in by FillInActions
         },
         1: {
             "own_obs": agent_obs[1],
             "opponent_obs": agent_obs[0],
-            "opponent_action": np.zeros(ACTION_VEC_SIZE),  # Filled in by FillInActions
+            "opponent_action": np.zeros(
+                ACTION_VECTOR_SIZE
+            ),  # Filled in by FillInActions
         },
     }
     return new_obs
@@ -188,7 +110,7 @@ if __name__ == "__main__":
 
     #### Constants, and errors #################################
     if OBS == ObservationType.KIN:
-        OWN_OBS_VEC_SIZE = 12
+        OWN_OBSERVATION_VEC_SIZE = 12
     elif OBS == ObservationType.RGB:
         print("[ERROR] ObservationType.RGB for multi-agent systems not yet implemented")
         exit()
@@ -196,11 +118,11 @@ if __name__ == "__main__":
         print("[ERROR] unknown ObservationType")
         exit()
     if ACT in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
-        ACTION_VEC_SIZE = 1
+        ACTION_VECTOR_SIZE = 1
     elif ACT in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
-        ACTION_VEC_SIZE = 4
+        ACTION_VECTOR_SIZE = 4
     elif ACT == ActionType.PID:
-        ACTION_VEC_SIZE = 3
+        ACTION_VECTOR_SIZE = 3
     else:
         print("[ERROR] unknown ActionType")
         exit()
@@ -210,7 +132,7 @@ if __name__ == "__main__":
     ray.init(ignore_reinit_error=True)
 
     #### Register the custom centralized critic model ##########
-    ModelCatalog.register_custom_model("cc_model", CustomTorchCentralizedCriticModel)
+    ModelCatalog.register_custom_model("cc_model", CentralizedCriticModel)
 
     #### Register the environment ##############################
     temp_env_name = "this-aviary-v0"
@@ -330,7 +252,7 @@ if __name__ == "__main__":
 
     #### Restore agent #########################################
     agent = ppo.PPOTrainer(config=config)
-    with open(ARGS.exp + "/checkpoint.txt", "r+") as f:
+    with open(ARGS.exp + "/path.txt", "r+") as f:
         checkpoint = f.read()
     agent.restore(checkpoint)
 

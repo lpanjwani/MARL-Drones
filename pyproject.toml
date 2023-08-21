@@ -7,7 +7,8 @@ license = "MIT"
 readme = "pypi_description.md"
 repository = "https://github.com/lpanjwani/MARL-Drones"
 packages = [
-    { include = "gym_pybullet_drones" }
+    { include = "gym_pybullet_drones" },
+    { include = "scripts" }
 ]
 
 [tool.poetry.dependencies]
