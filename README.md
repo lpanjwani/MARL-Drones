@@ -16,7 +16,7 @@ This project is a multi-agent reinforcement learning project that uses [MAPPO](h
 ## Installation
 
 ```bash
-!python3 -m pip install -e .
+python3 -m pip install -e .
 ```
 
 ## Usage
@@ -32,7 +32,7 @@ n_gpu = 1
 algo_type = "hover"
 action_type = "pid"
 
-!python scripts/learning/singleagent_ppo.py \
+python scripts/learning/singleagent_ppo.py \
   --env=$algo_type \
   --act=$action_type \
   --record_video=$record_video \
@@ -48,7 +48,7 @@ n_gpu = 1
 algo_type = "hover"
 action_type = "pid"
 
-!python scripts/learning/singleagent_ddpg.py \
+python scripts/learning/singleagent_ddpg.py \
   --env=$algo_type \
   --act=$action_type \
   --record_video=$record_video \
@@ -68,7 +68,7 @@ num_drones = 2
 n_gpu = 0
 algo_type = "flock"
 
-!RLLIB_NUM_GPUS=$n_gpu \
+RLLIB_NUM_GPUS=$n_gpu \
   python scripts/learning/multiagent_ppo.py \
   --env $algo_type \
   --num_drones $num_drones \
@@ -84,7 +84,7 @@ gui=False
 record_video=True
 result_folder="./results/save-flock-2-cc-kin-rpm-08.21.2023_13.55.36"
 
-!python scripts/learning/test_multiagent_ppo.py \
+python scripts/learning/test_multiagent_ppo.py \
   --exp $result_folder \
   --record_video=$record_video \
   --gui=$gui \
@@ -102,7 +102,7 @@ num_drones = 2
 n_gpu = 0
 algo_type = "flock"
 
-!RLLIB_NUM_GPUS=$n_gpu \
+RLLIB_NUM_GPUS=$n_gpu \
   python scripts/learning/multiagent_ddpg.py \
   --env $algo_type \
   --num_drones $num_drones \
@@ -118,9 +118,20 @@ gui=False
 record_video=True
 result_folder="./results/save-flock-2-cc-kin-rpm-08.21.2023_13.55.36"
 
-!python scripts/learning/test_multiagent_ddpg.py \
+python scripts/learning/test_multiagent_ddpg.py \
   --exp $result_folder \
   --record_video=$record_video \
   --gui=$gui \
    --colab=$colab
+```
+
+## Results
+
+```bash
+csv =  "./results/save-flock-2-cc-kin-rpm-08.21.2023_13.55.36/DDPG/progress.csv"
+label = "Multi-Agent DDPG"
+
+python scripts/visualize/results.py \
+  --csv $csv \
+  --label $label
 ```
