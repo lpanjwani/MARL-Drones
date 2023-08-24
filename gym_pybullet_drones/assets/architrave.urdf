@@ -1,33 +1,40 @@
-<?xml version="1.0" ?>
+<!-- # *************************************************************************************** -->
+<!-- # *    Title: Adopted from gym-pybullet-drones -->
+<!-- # *    Author: Learning Systems and Robotics Lab (LSY) -->
+<!-- # *    Date: August 2023 -->
+<!-- # *    Availability: GitHub: https://github.com/utiasDSL/gym-pybullet-drones -->
+<!-- # * -->
+<!-- # ***************************************************************************************/ -->
+
+<?xml version="1.0"?>
 
 <robot name="architrave">
 
-  <link name="base_link"> 
+  <link name="base_link">
 
     <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="0.3"/>
-      <inertia ixx="0" ixy="0.0" ixz="0.0" iyy="0" iyz="0.0" izz="0"/>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <mass value="0.3" />
+      <inertia ixx="0" ixy="0.0" ixz="0.0" iyy="0" iyz="0.0" izz="0" />
     </inertial>
 
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <box size=".8 .05 .05" />
-      </geometry> 
-      <material name="grey">
-        <color rgba=".5 .5 .5 1"/>
-      </material> 
-    </visual>
-
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
         <box size=".8 .05 .05" />
       </geometry>
-    </collision>  
+      <material name="grey">
+        <color rgba=".5 .5 .5 1" />
+      </material>
+    </visual>
+
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <box size=".8 .05 .05" />
+      </geometry>
+    </collision>
 
   </link>
 
 </robot>
-
