@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "gym-pybullet-drones"
+name = "marl-drones"
 version = "0.0.3"
-description = "PyBullet Gym environments for single and multi-agent reinforcement learning of quadcopter control"
+description = "Multi-Agent Reinforcement Learning for Drones"
 authors = ["Jacopo Panerati <jacopo.panerati@utoronto.ca>", "Lavesh Panjwani <lpanjwani@outlook.com>"]
 license = "MIT"
 readme = "pypi_description.md"
@@ -21,9 +21,10 @@ gym = "^0.21"
 pybullet = "^3.2"
 torch = "1.11.0"
 "ray[rllib]" = "1.9"
+stable-baselines3 = "1.5.0"
 scipy = "^1.8"
 tensorboard = "^2.9"
-protobuf = "3.20.*"
+protobuf = "^3.20.0"
 
 [tool.poetry.dev-dependencies]
 
