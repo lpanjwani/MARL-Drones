@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "gym-pybullet-drones"
+name = "marl-drones"
 version = "0.0.3"
-description = "PyBullet Gym environments for single and multi-agent reinforcement learning of quadcopter control"
+description = "Multi-Agent Reinforcement Learning for Drones"
 authors = ["Jacopo Panerati <jacopo.panerati@utoronto.ca>", "Lavesh Panjwani <lpanjwani@outlook.com>"]
 license = "MIT"
 readme = "pypi_description.md"
