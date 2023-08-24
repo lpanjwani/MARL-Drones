@@ -131,7 +131,7 @@ python scripts/learning/test_multiagent_ddpg.py \
 csv =  "./results/save-flock-2-cc-kin-rpm-08.21.2023_13.55.36/DDPG/progress.csv"
 label = "Multi-Agent DDPG"
 
-python scripts/plots/results.py \
+python scripts/visualize/results.py \
   --csv $csv \
   --label $label
 ```
