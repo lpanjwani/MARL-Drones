@@ -96,35 +96,35 @@ class MultiAgentPPOTester:
             help="Whether to record a video (default: False)",
             metavar="",
         )
-        ARGS = parser.parse_args()
+        args = parser.parse_args()
 
-        return ARGS
+        return args
 
-    def parse_arguments_pattern(self, ARGS):
-        self.environment_name = ARGS.exp.split("-")[1]
-        self.num_drones = int(ARGS.exp.split("-")[2])
+    def parse_arguments_pattern(self, args):
+        self.environment_name = args.exp.split("-")[1]
+        self.num_drones = int(args.exp.split("-")[2])
         self.observe_mode = (
             ObservationType.KIN
-            if ARGS.exp.split("-")[4] == "kin"
+            if args.exp.split("-")[4] == "kin"
             else ObservationType.RGB
         )
-        self.action_name = ARGS.exp.split("-")[5]
+        self.action_name = args.exp.split("-")[5]
         self.action = [
             action for action in ActionType if action.value == self.action_name
         ]
         self.action = self.action.pop()
 
     # Build action constants
-    def build_action_vector_size(self, ARGS):
-        if ARGS.act in [
+    def build_action_vector_size(self, args):
+        if args.act in [
             ActionType.ONE_D_RPM,
             ActionType.ONE_D_DYN,
             ActionType.ONE_D_PID,
         ]:
             ACTION_VECTOR_SIZE = 1
-        elif ARGS.act in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
+        elif args.act in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
             ACTION_VECTOR_SIZE = 4
-        elif ARGS.act == ActionType.PID:
+        elif args.act == ActionType.PID:
             ACTION_VECTOR_SIZE = 3
         else:
             print("[ERROR] unknown ActionType")
@@ -139,23 +139,23 @@ class MultiAgentPPOTester:
     def shutdown_ray(self):
         ray.shutdown()
 
-    def register_gym_environment(self, ARGS):
+    def register_gym_environment(self, args):
         # Register the custom centralized critic model
         ModelCatalog.register_custom_model(
             "central_critic_model", CentralizedCriticModel
         )
 
         if self.environment_name == "flock":
-            return self.register_flock_environment(ARGS)
+            return self.register_flock_environment(args)
         elif self.environment_name == "leaderfollower":
-            return self.register_leaderfollower_environment(ARGS)
+            return self.register_leaderfollower_environment(args)
         elif self.environment_name == "meetup":
-            return self.register_meetup_environment(ARGS)
+            return self.register_meetup_environment(args)
         else:
             print("[ERROR] environment not yet implemented")
             exit()
 
-    def register_flock_environment(self, ARGS):
+    def register_flock_environment(self, args):
         self.environment_name = "flock-aviary-v0"
 
         register_env(
@@ -173,11 +173,11 @@ class MultiAgentPPOTester:
             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
             obs=self.observe_mode,
             act=self.action,
-            gui=ARGS.gui,
-            record=ARGS.record_video,
+            gui=args.gui,
+            record=args.record_video,
         )
 
-    def register_leaderfollower_environment(self, ARGS):
+    def register_leaderfollower_environment(self, args):
         self.environment_name = "leaderfollower-aviary-v0"
 
         register_env(
@@ -195,11 +195,11 @@ class MultiAgentPPOTester:
             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
             obs=self.observe_mode,
             act=self.action,
-            gui=ARGS.gui,
-            record=ARGS.record_video,
+            gui=args.gui,
+            record=args.record_video,
         )
 
-    def register_meetup_environment(self, ARGS):
+    def register_meetup_environment(self, args):
         self.environment_name = "meetup-aviary-v0"
 
         register_env(
@@ -217,8 +217,8 @@ class MultiAgentPPOTester:
             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
             obs=self.observe_mode,
             act=self.action,
-            gui=ARGS.gui,
-            record=ARGS.record_video,
+            gui=args.gui,
+            record=args.record_video,
         )
 
     def register_spaces(self):
@@ -232,7 +232,7 @@ class MultiAgentPPOTester:
 
         self.action_space = self.environment.action_space[0]
 
-    def build_config(self, ARGS):
+    def build_config(self, args):
         self.trainer_config = ppo.DEFAULT_CONFIG.copy()
 
         self.trainer_config = {

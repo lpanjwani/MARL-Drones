@@ -106,24 +106,24 @@ class SingleAgentPPO:
             metavar="",
         )
 
-        ARGS = parser.parse_args()
+        args = parser.parse_args()
 
-        return ARGS
+        return args
 
     # Create results directory with timestamp
-    def create_results_directory(self, ARGS):
+    def create_results_directory(self, args):
         filename = (
             os.path.dirname(os.path.abspath(__file__))
             + "/results/save-"
-            + ARGS.env
+            + args.env
             + "-"
             + str(1)
             + "-"
-            + ARGS.algo
+            + args.algo
             + "-"
-            + ARGS.obs.value
+            + args.obs.value
             + "-"
-            + ARGS.act.value
+            + args.act.value
             + "-"
             + datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
         )
@@ -133,16 +133,16 @@ class SingleAgentPPO:
         return filename
 
     # Build action constants
-    def build_action_vector_size(self, ARGS):
-        if ARGS.act in [
+    def build_action_vector_size(self, args):
+        if args.act in [
             ActionType.ONE_D_RPM,
             ActionType.ONE_D_DYN,
             ActionType.ONE_D_PID,
         ]:
             ACTION_VECTOR_SIZE = 1
-        elif ARGS.act in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
+        elif args.act in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
             ACTION_VECTOR_SIZE = 4
-        elif ARGS.act == ActionType.PID:
+        elif args.act == ActionType.PID:
             ACTION_VECTOR_SIZE = 3
         else:
             print("[ERROR] unknown ActionType")
@@ -157,83 +157,83 @@ class SingleAgentPPO:
     def shutdown_ray(self):
         ray.shutdown()
 
-    def register_gym_environment(self, ARGS):
-        if ARGS.env == "hover":
-            return self.register_hover_environment(ARGS)
-        elif ARGS.env == "flythru":
-            return self.register_flythru_environment(ARGS)
-        elif ARGS.env == "takeoff":
-            return self.register_takeoff_environment(ARGS)
+    def register_gym_environment(self, args):
+        if args.env == "hover":
+            return self.register_hover_environment(args)
+        elif args.env == "flythru":
+            return self.register_flythru_environment(args)
+        elif args.env == "takeoff":
+            return self.register_takeoff_environment(args)
         else:
             print("[ERROR] environment not yet implemented")
             exit()
 
-    def register_hover_environment(self, ARGS):
+    def register_hover_environment(self, args):
         self.environment_name = "hover-aviary-v0"
 
         register_env(
             self.environment_name,
             lambda _: HoverAviary(
                 aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-                obs=ARGS.obs,
-                act=ARGS.act,
+                obs=args.obs,
+                act=args.act,
             ),
         )
 
         self.environment = HoverAviary(
             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-            obs=ARGS.obs,
-            act=ARGS.act,
-            gui=ARGS.gui,
-            record=ARGS.record_video,
+            obs=args.obs,
+            act=args.act,
+            gui=args.gui,
+            record=args.record_video,
         )
 
-    def register_flythru_environment(self, ARGS):
+    def register_flythru_environment(self, args):
         self.environment_name = "flythru-aviary-v0"
 
         register_env(
             self.environment_name,
             lambda _: FlyThruGateAviary(
                 aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-                obs=ARGS.obs,
-                act=ARGS.act,
+                obs=args.obs,
+                act=args.act,
             ),
         )
 
         self.environment = FlyThruGateAviary(
             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-            obs=ARGS.obs,
-            act=ARGS.act,
-            gui=ARGS.gui,
-            record=ARGS.record_video,
+            obs=args.obs,
+            act=args.act,
+            gui=args.gui,
+            record=args.record_video,
         )
 
-    def register_takeoff_environment(self, ARGS):
+    def register_takeoff_environment(self, args):
         self.environment_name = "takeoff-aviary-v0"
 
         register_env(
             self.environment_name,
             lambda _: TakeoffAviary(
                 aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-                obs=ARGS.obs,
-                act=ARGS.act,
+                obs=args.obs,
+                act=args.act,
             ),
         )
 
         self.environment = TakeoffAviary(
             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-            obs=ARGS.obs,
-            act=ARGS.act,
-            gui=ARGS.gui,
-            record=ARGS.record_video,
+            obs=args.obs,
+            act=args.act,
+            gui=args.gui,
+            record=args.record_video,
         )
 
-    def build_tuner_config(self, ARGS):
+    def build_tuner_config(self, args):
         self.tuner_config = ppo.DEFAULT_CONFIG.copy()
 
         self.tuner_config = {
             "env": self.environment_name,
-            "num_workers": 0 + ARGS.workers,
+            "num_workers": 0 + args.workers,
             "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")),
             "batch_mode": "complete_episodes",
             "framework": "torch",

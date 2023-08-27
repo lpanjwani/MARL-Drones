@@ -125,24 +125,24 @@ class MultiAgentPPO:
             metavar="",
         )
 
-        ARGS = parser.parse_args()
+        args = parser.parse_args()
 
-        return ARGS
+        return args
 
     # Create results directory with timestamp
-    def create_results_directory(self, ARGS):
+    def create_results_directory(self, args):
         filename = (
             os.path.dirname(os.path.abspath(__file__))
             + "/results/save-"
-            + ARGS.env
+            + args.env
             + "-"
-            + str(ARGS.num_drones)
+            + str(args.num_drones)
             + "-"
-            + ARGS.algo
+            + args.algo
             + "-"
-            + ARGS.obs.value
+            + args.obs.value
             + "-"
-            + ARGS.act.value
+            + args.act.value
             + "-"
             + datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
         )
@@ -152,16 +152,16 @@ class MultiAgentPPO:
         return filename
 
     # Build action constants
-    def build_action_vector_size(self, ARGS):
-        if ARGS.act in [
+    def build_action_vector_size(self, args):
+        if args.act in [
             ActionType.ONE_D_RPM,
             ActionType.ONE_D_DYN,
             ActionType.ONE_D_PID,
         ]:
             ACTION_VECTOR_SIZE = 1
-        elif ARGS.act in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
+        elif args.act in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
             ACTION_VECTOR_SIZE = 4
-        elif ARGS.act == ActionType.PID:
+        elif args.act == ActionType.PID:
             ACTION_VECTOR_SIZE = 3
         else:
             print("[ERROR] unknown ActionType")
@@ -176,86 +176,86 @@ class MultiAgentPPO:
     def shutdown_ray(self):
         ray.shutdown()
 
-    def register_gym_environment(self, ARGS):
+    def register_gym_environment(self, args):
         # Register the custom centralized critic model
         ModelCatalog.register_custom_model(
             "central_critic_model", CentralizedCriticModel
         )
 
-        if ARGS.env == "flock":
-            return self.register_flock_environment(ARGS)
-        elif ARGS.env == "leaderfollower":
-            return self.register_leaderfollower_environment(ARGS)
-        elif ARGS.env == "meetup":
-            return self.register_meetup_environment(ARGS)
+        if args.env == "flock":
+            return self.register_flock_environment(args)
+        elif args.env == "leaderfollower":
+            return self.register_leaderfollower_environment(args)
+        elif args.env == "meetup":
+            return self.register_meetup_environment(args)
         else:
             print("[ERROR] environment not yet implemented")
             exit()
 
-    def register_flock_environment(self, ARGS):
+    def register_flock_environment(self, args):
         self.environment_name = "flock-aviary-v0"
 
         register_env(
             self.environment_name,
             lambda _: FlockAviary(
-                num_drones=ARGS.num_drones,
+                num_drones=args.num_drones,
                 aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-                obs=ARGS.obs,
-                act=ARGS.act,
+                obs=args.obs,
+                act=args.act,
             ),
         )
 
         self.environment = FlockAviary(
-            num_drones=ARGS.num_drones,
+            num_drones=args.num_drones,
             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-            obs=ARGS.obs,
-            act=ARGS.act,
-            gui=ARGS.gui,
-            record=ARGS.record_video,
+            obs=args.obs,
+            act=args.act,
+            gui=args.gui,
+            record=args.record_video,
         )
 
-    def register_leaderfollower_environment(self, ARGS):
+    def register_leaderfollower_environment(self, args):
         self.environment_name = "leaderfollower-aviary-v0"
 
         register_env(
             self.environment_name,
             lambda _: LeaderFollowerAviary(
-                num_drones=ARGS.num_drones,
+                num_drones=args.num_drones,
                 aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-                obs=ARGS.obs,
-                act=ARGS.act,
+                obs=args.obs,
+                act=args.act,
             ),
         )
 
         self.environment = LeaderFollowerAviary(
-            num_drones=ARGS.num_drones,
+            num_drones=args.num_drones,
             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-            obs=ARGS.obs,
-            act=ARGS.act,
-            gui=ARGS.gui,
-            record=ARGS.record_video,
+            obs=args.obs,
+            act=args.act,
+            gui=args.gui,
+            record=args.record_video,
         )
 
-    def register_meetup_environment(self, ARGS):
+    def register_meetup_environment(self, args):
         self.environment_name = "meetup-aviary-v0"
 
         register_env(
             self.environment_name,
             lambda _: MeetupAviary(
-                num_drones=ARGS.num_drones,
+                num_drones=args.num_drones,
                 aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-                obs=ARGS.obs,
-                act=ARGS.act,
+                obs=args.obs,
+                act=args.act,
             ),
         )
 
         self.environment = MeetupAviary(
-            num_drones=ARGS.num_drones,
+            num_drones=args.num_drones,
             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-            obs=ARGS.obs,
-            act=ARGS.act,
-            gui=ARGS.gui,
-            record=ARGS.record_video,
+            obs=args.obs,
+            act=args.act,
+            gui=args.gui,
+            record=args.record_video,
         )
 
     def register_spaces(self):
@@ -269,12 +269,12 @@ class MultiAgentPPO:
 
         self.action_space = self.environment.action_space[0]
 
-    def build_tuner_config(self, ARGS):
+    def build_tuner_config(self, args):
         self.tuner_config = ppo.DEFAULT_CONFIG.copy()
 
         self.tuner_config = {
             "env": self.environment_name,
-            "num_workers": 0 + ARGS.workers,
+            "num_workers": 0 + args.workers,
             "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")),
             "batch_mode": "complete_episodes",
             "callbacks": FillInActions,
