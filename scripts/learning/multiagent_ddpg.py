@@ -15,9 +15,9 @@ from ray.rllib.agents.ddpg import DDPGTrainer
 from ray.rllib.utils.test_utils import check_learning_achieved
 from ray.rllib.models import ModelCatalog
 
-from scripts.learning.central_a2c.model import CentralizedCriticModel
-from scripts.learning.central_a2c.fill_in_actions import FillInActions
-from scripts.learning.central_a2c.observer import (
+from scripts.learning.central_critic.model import CentralizedCriticModel
+from scripts.learning.central_critic.fill_in_actions import FillInActions
+from scripts.learning.central_critic.observer import (
     central_critic_observer,
 )
 
@@ -178,7 +178,9 @@ class MultiAgentDDPG:
 
     def register_gym_environment(self, ARGS):
         # Register the custom centralized critic model
-        ModelCatalog.register_custom_model("central_a2c_model", CentralizedCriticModel)
+        ModelCatalog.register_custom_model(
+            "central_critic_model", CentralizedCriticModel
+        )
 
         if ARGS.env == "flock":
             return self.register_flock_environment(ARGS)
@@ -280,7 +282,7 @@ class MultiAgentDDPG:
         }
 
         self.tuner_config["model"] = {
-            "custom_model": "central_a2c_model",
+            "custom_model": "central_critic_model",
         }
 
         self.tuner_config["multiagent"] = {
