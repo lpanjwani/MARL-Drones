@@ -231,13 +231,15 @@ class SingleAgentPPO:
     def build_tuner_config(self, ARGS):
         self.tuner_config = ddpg.DEFAULT_CONFIG.copy()
 
-        self.tuner_config = {
-            "env": self.environment_name,
-            "num_workers": 0 + ARGS.workers,
-            "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")),
-            "batch_mode": "complete_episodes",
-            "framework": "torch",
-        }
+        self.tuner_config.update(
+            {
+                "env": self.environment_name,
+                "num_workers": 0 + ARGS.workers,
+                "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")),
+                "batch_mode": "complete_episodes",
+                "framework": "torch",
+            }
+        )
 
     def build_tuner_stop_conditions(self):
         self.tuner_stopper = {
