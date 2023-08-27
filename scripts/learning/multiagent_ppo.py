@@ -75,10 +75,10 @@ class MultiAgentPPO:
         )
         parser.add_argument(
             "--env",
-            default="leaderfollower",
+            default="hover",
             type=str,
-            choices=["leaderfollower", "flock", "meetup"],
-            help="Task (default: leaderfollower)",
+            choices=["hover", "flythry", "takeoff"],
+            help="Environment Goal (default is hover)",
             metavar="",
         )
         parser.add_argument(

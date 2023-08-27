@@ -59,7 +59,7 @@ class SingleAgentPPO:
             default="hover",
             type=str,
             choices=["hover", "flythry", "takeoff"],
-            help="Task (default: hover)",
+            help="Environment Goal (default is hover)",
             metavar="",
         )
         parser.add_argument(
