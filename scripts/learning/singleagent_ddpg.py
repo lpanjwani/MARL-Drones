@@ -28,7 +28,7 @@ OWN_OBSERVATION_VEC_SIZE = 12
 ACTION_VECTOR_SIZE = 4
 
 
-class SingleAgentPPO:
+class SingleAgentDDPG:
     args = None
     environment = None
     environment_name = None
@@ -271,4 +271,4 @@ class SingleAgentPPO:
 
 
 if __name__ == "__main__":
-    SingleAgentPPO()
+    SingleAgentDDPG()
